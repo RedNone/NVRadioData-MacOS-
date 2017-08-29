@@ -1,0 +1,6 @@
+framework module Pods_NVRadioData {
+  umbrella header "Pods-NVRadioData-umbrella.h"
+
+  export *
+  module * { export * }
+}
