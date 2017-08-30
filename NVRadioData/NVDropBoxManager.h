@@ -14,5 +14,6 @@
 
 + (NVDropBoxManager*)sharedManager;
 - (void)downLoadDataWithCompletionBlock:(void(^)(void))completionBlock;
+- (void)uploadDataToDropBox;
 
 @end

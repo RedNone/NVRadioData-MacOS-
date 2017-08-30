@@ -4,6 +4,7 @@
 #import "NVDropBoxManager.h"
 #import "NVMainViewController.h"
 #import "NVRadioDataModel.h"
+#import "NVRadioStatus.h"
 
 @interface NVMainViewController ()
 @property(nonatomic,strong) DBUserClient *dbUser;
@@ -27,7 +28,7 @@
                                                      forEventClass:kInternetEventClass
                                                         andEventID:kAEGetURL];
     self.dbUser = [DBClientsManager authorizedClient];
-    if(self.dbUser){
+    if([self.dbUser isAuthorized]){
         [self prepareViews];
     }
 }
@@ -42,11 +43,9 @@
             self.dbUser = [DBClientsManager authorizedClient];
             [self.dropBoxManager downLoadDataWithCompletionBlock:^{
                 if(self.dropBoxManager.radioData){
-                    for(NVRadioDataModel *model in self.dropBoxManager.radioData){
-                        NSLog(@"%@",model.radioName);
-                    }
-                }
-                [self.tableView reloadData];
+                    [self prepareViews];
+                    [self.tableView reloadData];
+                }                
             }];
         } else if ([authResult isCancel]) {
             NSLog(@"Authorization flow was manually canceled by user!");
@@ -79,11 +78,11 @@
 #pragma mark - Actions
 
 - (IBAction)saveButtonAction:(NSButton *)sender {
-    for(int i = 0; i < [self.dropBoxManager.radioData count]; i++){
+   /* for(int i = 0; i < [self.dropBoxManager.radioData count]; i++){
         NVRadioDataModel *model = [self.dropBoxManager.radioData objectAtIndex:i];
         NSLog(@"\nName: %@ \n URL: %@",model.radioName,model.radioUrl);
-    }
-      
+    }*/
+    [self.dropBoxManager uploadDataToDropBox];
 }
 
 - (IBAction)deleteRowButtonAction:(NSButton *)sender {

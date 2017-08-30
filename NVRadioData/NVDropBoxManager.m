@@ -32,10 +32,7 @@
 - (void)downLoadDataWithCompletionBlock:(void(^)(void))completionBlock{
     
     self.dbUser = [DBClientsManager authorizedClient];
-    
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSURL *outputDirectory = [fileManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask][0];
-    
+       
     [[self.dbUser.filesRoutes downloadData:@"/FMJson.json"]
      setResponseBlock:^(DBFILESFileMetadata *result, DBFILESDownloadError *routeError, DBRequestError *error,
                         NSData *fileContents) {
@@ -60,5 +57,42 @@
      }];
 }
 
+- (void)uploadDataToDropBox{
+    NSData *jsonData = [self createJsonFromArray:self.radioData];
+    
+    NSString *somestring = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    
+    NSLog(@"%@",somestring);
+    
+    DBFILESWriteMode *mode = [[DBFILESWriteMode alloc] initWithOverwrite];
+    
+    [[[self.dbUser.filesRoutes uploadData:@"/FMJson.json"
+                                mode:mode
+                          autorename:@(YES)
+                      clientModified:nil
+                                mute:@(NO)
+                           inputData:jsonData]
+      setResponseBlock:^(DBFILESFileMetadata *result, DBFILESUploadError *routeError, DBRequestError *networkError) {
+          if (result) {
+              NSLog(@"%@\n", result);
+          } else {
+              NSLog(@"%@\n%@\n", routeError, networkError);
+          }
+      }] setProgressBlock:^(int64_t bytesUploaded, int64_t totalBytesUploaded, int64_t totalBytesExpectedToUploaded) {
+          NSLog(@"\n%lld\n%lld\n%lld\n", bytesUploaded, totalBytesUploaded, totalBytesExpectedToUploaded);
+      }];
+}
+
+- (NSData *)createJsonFromArray:(NSArray *)array{
+    NSMutableArray *newArray = [[NSMutableArray alloc] initWithCapacity:[array count]];
+    for(NVRadioDataModel *model in array){
+        NSDictionary *dict = @{@"id" : [NSString stringWithFormat:@"%ld",(long)model.radioId], @"name" : model.radioName, @"url" : model.radioUrl};
+        [newArray addObject:dict];
+    }
+  
+    return [NSJSONSerialization dataWithJSONObject:newArray
+                                           options:kNilOptions
+                                             error:nil];
+}
 
 @end
