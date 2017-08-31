@@ -7,6 +7,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import "AVKit/AVKit.h"
 
 @interface NVMainViewController : NSViewController
 
@@ -15,6 +16,8 @@
 @property (weak) IBOutlet NSButton *logInButton;
 @property (weak) IBOutlet NSTableView *tableView;
 @property (weak) IBOutlet NSView *headerView;
+@property (weak) IBOutlet AVPlayerView *playerView;
+@property (weak) IBOutlet NSProgressIndicator *progressIndicator;
 
 
 - (IBAction)saveButtonAction:(NSButton *)sender;

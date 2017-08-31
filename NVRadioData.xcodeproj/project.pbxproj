@@ -17,7 +17,6 @@
 		350F8A4C1F5443B900D3A217 /* NVMainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 350F8A4B1F5443B900D3A217 /* NVMainViewController.m */; };
 		352A1D681F55427400040E72 /* NVDropBoxManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 352A1D661F55427400040E72 /* NVDropBoxManager.m */; };
 		352A1D6D1F5546ED00040E72 /* NVRadioDataModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 352A1D6C1F5546ED00040E72 /* NVRadioDataModel.m */; };
-		3530A7E61F55A17400E748FF /* NVRadioStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 3530A7E51F55A17400E748FF /* NVRadioStatus.m */; };
 		35BA1BF51F55BE0900FB6DB9 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3530A7E71F55A1B100E748FF /* AVFoundation.framework */; };
 		35BA1BF61F55BE0900FB6DB9 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3530A7E91F55AEAF00E748FF /* AVKit.framework */; };
 /* End PBXBuildFile section */
@@ -39,10 +38,9 @@
 		352A1D661F55427400040E72 /* NVDropBoxManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NVDropBoxManager.m; sourceTree = "<group>"; };
 		352A1D6B1F5546ED00040E72 /* NVRadioDataModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NVRadioDataModel.h; sourceTree = "<group>"; };
 		352A1D6C1F5546ED00040E72 /* NVRadioDataModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NVRadioDataModel.m; sourceTree = "<group>"; };
-		3530A7E41F55A17400E748FF /* NVRadioStatus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NVRadioStatus.h; sourceTree = "<group>"; };
-		3530A7E51F55A17400E748FF /* NVRadioStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NVRadioStatus.m; sourceTree = "<group>"; };
 		3530A7E71F55A1B100E748FF /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		3530A7E91F55AEAF00E748FF /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
+		35F6FB3C1F5705FD00BC5D2B /* NVRadioData.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NVRadioData.entitlements; sourceTree = "<group>"; };
 		7C0EFEC54F6830EF0FA45777 /* Pods-NVRadioData.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NVRadioData.debug.xcconfig"; path = "Pods/Target Support Files/Pods-NVRadioData/Pods-NVRadioData.debug.xcconfig"; sourceTree = "<group>"; };
 		FAF2A682330E3A18D5F1D695 /* Pods-NVRadioData.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NVRadioData.release.xcconfig"; path = "Pods/Target Support Files/Pods-NVRadioData/Pods-NVRadioData.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -84,12 +82,11 @@
 		350F8A311F5419E800D3A217 /* NVRadioData */ = {
 			isa = PBXGroup;
 			children = (
+				35F6FB3C1F5705FD00BC5D2B /* NVRadioData.entitlements */,
 				352A1D6A1F5546CF00040E72 /* Models */,
 				350F8A4D1F54442600D3A217 /* ViewControllers */,
 				352A1D651F55427400040E72 /* NVDropBoxManager.h */,
 				352A1D661F55427400040E72 /* NVDropBoxManager.m */,
-				3530A7E41F55A17400E748FF /* NVRadioStatus.h */,
-				3530A7E51F55A17400E748FF /* NVRadioStatus.m */,
 				350F8A3D1F5419E800D3A217 /* Main.storyboard */,
 				350F8A351F5419E800D3A217 /* Supporting Files */,
 			);
@@ -183,6 +180,14 @@
 						CreatedOnToolsVersion = 8.3.3;
 						DevelopmentTeam = X85RG62ZLZ;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.Keychain = {
+								enabled = 0;
+							};
+							com.apple.Sandbox = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -280,7 +285,6 @@
 				350F8A4C1F5443B900D3A217 /* NVMainViewController.m in Sources */,
 				352A1D681F55427400040E72 /* NVDropBoxManager.m in Sources */,
 				350F8A341F5419E800D3A217 /* AppDelegate.m in Sources */,
-				3530A7E61F55A17400E748FF /* NVRadioStatus.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -392,6 +396,7 @@
 			baseConfigurationReference = 7C0EFEC54F6830EF0FA45777 /* Pods-NVRadioData.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = NVRadioData/NVRadioData.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = X85RG62ZLZ;
 				INFOPLIST_FILE = NVRadioData/Info.plist;
@@ -406,6 +411,7 @@
 			baseConfigurationReference = FAF2A682330E3A18D5F1D695 /* Pods-NVRadioData.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = NVRadioData/NVRadioData.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = X85RG62ZLZ;
 				INFOPLIST_FILE = NVRadioData/Info.plist;

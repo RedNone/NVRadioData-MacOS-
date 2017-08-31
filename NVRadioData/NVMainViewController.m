@@ -4,14 +4,22 @@
 #import "NVDropBoxManager.h"
 #import "NVMainViewController.h"
 #import "NVRadioDataModel.h"
-#import "NVRadioStatus.h"
+#import <Foundation/Foundation.h>
+#import "AVFoundation/AVFoundation.h"
 
 @interface NVMainViewController ()
 @property(nonatomic,strong) DBUserClient *dbUser;
 @property(nonatomic,strong) NVDropBoxManager *dropBoxManager;
+@property(nonatomic,strong) AVPlayer *player;
+@property(nonatomic,assign) NSInteger currentRadioCheck;
+@property(nonatomic,assign) bool isCheckForSingleModel;
 @end
 
 @implementation NVMainViewController
+
+-(void)dealloc{
+    [self.player removeObserver:self forKeyPath:@"status"];
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -39,13 +47,18 @@
     if (authResult != nil) {
         if ([authResult isSuccess]) {
             NSLog(@"Success! User is logged into Dropbox.");
-            [self prepareViews];
+            self.logInButton.hidden = YES;
+            self.progressIndicator.hidden = NO;
+            
             self.dbUser = [DBClientsManager authorizedClient];
             [self.dropBoxManager downLoadDataWithCompletionBlock:^{
                 if(self.dropBoxManager.radioData){
-                    [self prepareViews];
-                    [self.tableView reloadData];
-                }                
+                    self.currentRadioCheck = 0;
+                    self.isCheckForSingleModel = NO;
+                    NVRadioDataModel *model = [self.dropBoxManager.radioData objectAtIndex:self.currentRadioCheck];
+                    [self playWithUrlString:model.radioUrl];
+                }
+                
             }];
         } else if ([authResult isCancel]) {
             NSLog(@"Authorization flow was manually canceled by user!");
@@ -61,11 +74,14 @@
     }
 }
 
+
+
 - (void)prepareViews{
     self.messageLabel.hidden = YES;
     self.logInButton.hidden = YES;
     self.scrollViewWithTable.hidden = NO;
     self.headerView.hidden = NO;
+    self.progressIndicator.hidden = YES;
 }
 
 - (void)convertRadioDataID{
@@ -78,10 +94,7 @@
 #pragma mark - Actions
 
 - (IBAction)saveButtonAction:(NSButton *)sender {
-   /* for(int i = 0; i < [self.dropBoxManager.radioData count]; i++){
-        NVRadioDataModel *model = [self.dropBoxManager.radioData objectAtIndex:i];
-        NSLog(@"\nName: %@ \n URL: %@",model.radioName,model.radioUrl);
-    }*/
+    
     [self.dropBoxManager uploadDataToDropBox];
 }
 
@@ -103,6 +116,7 @@
     NVRadioDataModel *newModel = [NVRadioDataModel new];
     newModel.radioUrl = @"";
     newModel.radioName = @"";
+    newModel.radioUrlStatus = @"";
     
     [self.dropBoxManager.radioData insertObject:newModel atIndex:currentRow+1];
     [self convertRadioDataID];
@@ -123,7 +137,6 @@
     if(currentRow != -1){
         NVRadioDataModel *model = [self.dropBoxManager.radioData objectAtIndex:currentRow];
         model.radioName = sender.stringValue;
-        NSLog(@"%@",model.radioName);
     }
 }
 - (IBAction)radioUrlTextFieldAction:(NSTextField *)sender {
@@ -131,7 +144,10 @@
     if(currentRow != -1){
         NVRadioDataModel *model = [self.dropBoxManager.radioData objectAtIndex:currentRow];
         model.radioUrl = sender.stringValue;
-        NSLog(@"%@",model.radioUrl);
+        
+        self.currentRadioCheck = currentRow;
+        self.isCheckForSingleModel = YES;
+        [self playWithUrlString:model.radioUrl];
     }
 }
 
@@ -158,13 +174,80 @@
         text = model.radioUrl;
         identifire = @"urlCellID";
     }
-    
+    if(tableColumn == [[tableView tableColumns] objectAtIndex:2]){
+        text = model.radioUrlStatus;
+        identifire = @"statusCellID";
+    }
     NSTableCellView *cell = [tableView makeViewWithIdentifier:identifire owner:nil];
     cell.textField.stringValue = text;
    
     return cell;
 }
 
+#pragma mark - Check Radio Status
 
+-(void)playWithUrlString:(NSString *)urlString{
+    
+    if(![self validateUrl:urlString]){
+        [self validateResultWithStatus:@"Unavailable"];
+        return;
+    }
+    
+    AVPlayer *player = [AVPlayer playerWithURL:[NSURL URLWithString:urlString]];
+    self.playerView.player = player;
+    self.player = player;
+    player.volume = 0.f;
+    [self.player addObserver:self forKeyPath:@"status" options:0 context:nil];
+    
+}
+
+- (BOOL)validateUrl:(NSString *)candidate {
+    NSString *urlRegEx =
+    @"^(?i)(?:(?:https?|ftp):\\/\\/)?(?:\\S+(?::\\S*)?@)?(?:(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)(?:\\.(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)*(?:\\.(?:[a-z\\u00a1-\\uffff]{2,})))(?::\\d{2,5})?(?:\\/[^\\s]*)?$";
+    
+    NSPredicate *urlTest = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", urlRegEx];
+    return [urlTest evaluateWithObject:candidate];
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+    
+    if (object == self.player && [keyPath isEqualToString:@"status"]) {
+        if (self.player.status == AVPlayerStatusFailed) {
+            [self validateResultWithStatus:@"Unavailable"];
+        } else if (self.player.status == AVPlayerStatusReadyToPlay) {
+            [self.playerView.player play];
+            
+            if ((self.playerView.player.rate != 0) && (self.playerView.player.error == nil)) {
+                 [self validateResultWithStatus:@"Available"];
+                 [self.playerView.player pause];
+            }
+            
+        } else if (self.player.status == AVPlayerItemStatusUnknown) {
+            [self validateResultWithStatus:@"Unavailable"];
+        }
+    }
+}
+
+- (void)validateResultWithStatus:(NSString *)status {
+    
+    NVRadioDataModel *model = [self.dropBoxManager.radioData objectAtIndex:self.currentRadioCheck];
+    model.radioUrlStatus = status;
+    
+    if(self.isCheckForSingleModel){
+        [self.tableView reloadDataForRowIndexes:[NSIndexSet indexSetWithIndex:self.currentRadioCheck]
+                                   columnIndexes:[NSIndexSet indexSetWithIndex:2]];
+        return;
+    }
+    ++self.currentRadioCheck;
+    
+    if(self.currentRadioCheck == [self.dropBoxManager.radioData count]){
+        [self.tableView reloadData];
+        [self prepareViews];
+        return;
+    } else {
+        model = [self.dropBoxManager.radioData objectAtIndex:self.currentRadioCheck];
+        [self playWithUrlString: model.radioUrl];
+    }
+}
 
 @end
